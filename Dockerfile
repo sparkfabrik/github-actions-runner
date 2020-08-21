@@ -3,6 +3,11 @@ FROM quay.io/evryfs/github-actions-runner:2.273.0
 # Switch to root user for software installation.
 USER root
 
+# Make runner user use sudo without a password:
+RUN apt update && apt install -y sudo
+# Add runner user to sudoers without password request.
+RUN echo 'runner ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/runner
+
 # Install yarn.
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
   echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
