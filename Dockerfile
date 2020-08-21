@@ -1,4 +1,4 @@
-FROM quay.io/evryfs/github-actions-runner:2.272.0-1
+FROM quay.io/evryfs/github-actions-runner:2.273.0
 
 # Switch to root user for software installation.
 USER root
