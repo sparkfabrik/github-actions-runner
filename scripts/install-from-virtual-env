@@ -1,0 +1,24 @@
+ #!/bin/bash
+
+export METADATA_FILE=/metadatafile
+export HELPER_SCRIPTS=/virtual-environments/images/linux/scripts/helpers
+export SCRIPT_PATH=/virtual-environments/images/linux/scripts/installers
+
+if [ ! -d /virtual-environments ]; then
+    git config advice.detachedHead false
+    git clone --branch ${VIRTUAL_ENVIRONMENT_VERSION} --single-branch https://github.com/actions/virtual-environments /virtual-environments
+fi
+if [ -z $1 ]; then
+    echo "You have the package you want to install."
+    exit 1
+fi
+SCRIPT="${1}.sh"
+if [ ! -f ${SCRIPT_PATH}/${SCRIPT} ]; then
+    echo "Package not available in the virtual environment."
+    exit 1
+fi
+
+chmod +x ${SCRIPT_PATH}/${SCRIPT}
+${SCRIPT_PATH}/${SCRIPT}
+
+

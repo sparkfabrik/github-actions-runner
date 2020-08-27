@@ -1,36 +1,34 @@
-FROM quay.io/evryfs/github-actions-runner:2.273.0
+FROM quay.io/evryfs/github-actions-runner@sha256:7bfa720303eaef09a4886e6290efe503b7ed92d176334f29149c3b25cf24e185
 
 # Switch to root user for software installation.
 USER root
 
 # Make runner user use sudo without a password:
-RUN apt update && apt install -y sudo
+RUN apt update && apt install -y git sudo
+
+# Use apt-fast for parallel downloads
+RUN apt-get install -y aria2 && \
+    add-apt-repository -y ppa:apt-fast/stable && \
+    apt-get update && \
+    apt-get -y install apt-fast
+
 # Add runner user to sudoers without password request.
 RUN echo 'runner ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/runner
 
-# Install yarn.
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-  echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-  apt-get -y update && \
-  apt-get -y --no-install-recommends install yarn && \
-  apt-get -y --no-install-recommends install htop
+# This the release tag of virtual-environments: https://github.com/actions/virtual-environments/releases
+ENV VIRTUAL_ENVIRONMENT_VERSION=ubuntu18/20200817.1
 
-# Install Cypress dependencies.
-RUN apt-get -y update && \
-  apt-get -y --no-install-recommends install sudo libgtk2.0-0 libgtk-3-0 libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb libxcomposite1 libxcursor1
+# Copy scripts.
+COPY scripts/install-from-virtual-env /usr/local/bin
+COPY scripts/snap /usr/local/bin
+RUN chmod +x /usr/local/bin/install-from-virtual-env
+RUN chmod +x /usr/local/bin/snap
 
-# Install Google Chrome.
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-  echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list && \
-  apt-get -y update && \
-  apt-get -y --no-install-recommends install google-chrome-stable && \
-  echo "CHROME_BIN=/usr/bin/google-chrome" | tee -a /etc/environment
-
-# Install the Google Cloud SDK
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-    apt-get update -y && \
-    apt-get install -y google-cloud-sdk
+# Install packages from virtual-environment repository.
+RUN install-from-virtual-env basic
+RUN install-from-virtual-env google-chrome
+RUN install-from-virtual-env google-cloud-sdk
+RUN install-from-virtual-env kubernetes-tools
 
 # Clean apt cache.
 RUN apt-get -y clean && \
