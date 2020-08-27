@@ -1,24 +1,30 @@
- #!/bin/bash
+#!/bin/bash
+set -e
 
+# Add some environment vars needed by virtual-environment installation scripts.
 export METADATA_FILE=/metadatafile
 export HELPER_SCRIPTS=/virtual-environments/images/linux/scripts/helpers
 export SCRIPT_PATH=/virtual-environments/images/linux/scripts/installers
-
+git config --global advice.detachedHead false
+# Clone virtual environments repo if not present.
 if [ ! -d /virtual-environments ]; then
-    git config advice.detachedHead false
-    git clone --branch ${VIRTUAL_ENVIRONMENT_VERSION} --single-branch https://github.com/actions/virtual-environments /virtual-environments
+  git clone --branch ${VIRTUAL_ENVIRONMENT_VERSION} --single-branch https://github.com/actions/virtual-environments /virtual-environments
 fi
+# Add Microsoft repos.
+if [ ! -f /etc/apt/trusted.gpg.d/microsoft.gpg ]; then
+  chmod +x /virtual-environments/images/linux/scripts/base/repos.sh
+  /virtual-environments/images/linux/scripts/base/repos.sh
+fi
+# Check if an installable package is given in input.
 if [ -z $1 ]; then
-    echo "You have the package you want to install."
-    exit 1
+  echo "You have to specify the package you want to install."
+  exit 1
 fi
 SCRIPT="${1}.sh"
 if [ ! -f ${SCRIPT_PATH}/${SCRIPT} ]; then
-    echo "Package not available in the virtual environment."
-    exit 1
+  echo "Package is not available in the virtual environment."
+  exit 1
 fi
-
+# Make the script file executable and run it.
 chmod +x ${SCRIPT_PATH}/${SCRIPT}
 ${SCRIPT_PATH}/${SCRIPT}
-
-
