@@ -4,9 +4,9 @@ FROM quay.io/evryfs/github-actions-runner:2.273.1
 USER root
 
 # Use apt-fast for parallel downloads
-RUN apt-get install -y aria2 && \
-    add-apt-repository -y ppa:apt-fast/stable && \
+RUN add-apt-repository -y ppa:apt-fast/stable && \
     apt-get update && \
+    apt-get install -y aria2 && \
     apt-get -y install apt-fast
 
 # Add runner user to sudoers without password request.
